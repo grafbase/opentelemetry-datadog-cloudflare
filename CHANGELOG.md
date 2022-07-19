@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Update CI Merge
+
 ## [0.1.2]
 
 -   Test release

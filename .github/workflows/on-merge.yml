@@ -34,7 +34,7 @@ jobs:
         git config user.email "ci-not-reply@grafbase.com"
     - name: Extract version label
       id: extract-version-label
-      uses: actions/github-script@v2
+      uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.DEPLOY_TOKEN }}
         script: |
@@ -86,7 +86,7 @@ jobs:
         echo "::set-output name=name::$NAME"
     - name: Create deployment
       id: deployment
-      uses: actions/github-script@v2
+      uses: actions/github-script@v6
       env:
         REF: ${{ steps.push.outputs.ref }}
         VERSION: ${{ steps.push.outputs.VERSION }}
@@ -129,7 +129,7 @@ jobs:
         echo "::set-output name=version-part::$VERSION_PART"
     - name: Create Release
       if: steps.extract-version-label.outputs.versionBump != 'beta'
-      uses: actions/github-script@v2
+      uses: actions/github-script@v6
       env:
         VERSION: ${{ steps.push.outputs.version }}
         BODY: ${{ steps.extract-changelog.outputs.version-part }}
