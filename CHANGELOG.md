@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Update CI, remove preview to create deployment
+
 ## [0.1.3]
 
 -   Update CI Merge

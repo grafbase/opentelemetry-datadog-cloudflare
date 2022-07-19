@@ -94,7 +94,6 @@ jobs:
         VERSION_BUMP: ${{ steps.extract-version-labels.outputs.versionBump }}
       with:
         github-token: ${{ secrets.DEPLOY_TOKEN }}
-        previews: 'ant-man-preview,flash-preview'
         script: |
           const ref = process.env.REF;
           const name = process.env.NAME;
