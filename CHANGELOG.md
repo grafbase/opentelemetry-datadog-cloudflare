@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-- Use workflow token to trigger deploy
+## [0.1.10]
+
+-   Use workflow token to trigger deploy
 
 ## [0.1.9]
 
