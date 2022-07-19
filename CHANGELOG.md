@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Use workflow token to trigger deploy
+
 ## [0.1.9]
 
 -   Change to token to create a release
