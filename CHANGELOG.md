@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Update README.md
+- Update Actions
 
 ## [0.1.0]
 
