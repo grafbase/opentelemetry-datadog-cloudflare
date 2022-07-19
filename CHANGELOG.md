@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-- Test release
+## [0.1.2]
+
+-   Test release
 
 ## [0.1.1]
 
