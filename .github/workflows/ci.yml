@@ -1,0 +1,38 @@
+name: Continuous integration
+
+on:
+  pull_request:
+    types: [push, synchronize, opened, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  clippy_check:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+          profile: minimal
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --features surf-client
+  build_and_test:
+    name: Build CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+          profile: minimal
+      - name: Check with surf-client
+        run: cargo check --features surf-client
+      - name: Clean
+        run: cargo clean
+
