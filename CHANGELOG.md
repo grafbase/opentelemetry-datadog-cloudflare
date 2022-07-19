@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+-   Solve the release creation
+
 ## [0.1.6]
 
 -   Downgrade deployment Action
