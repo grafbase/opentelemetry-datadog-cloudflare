@@ -20,3 +20,4 @@ Based on [`opentelemetry-datadog`](https://github.com/open-telemetry/opentelemet
 `opentelemetry-datadog-cloudflare` supports following features:
 
 - `surf-client`: use `surf` http client to send spans.
+
