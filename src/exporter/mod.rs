@@ -111,10 +111,8 @@ impl WASMWorkerSpanProcessor {
 
         ctx.wait_until(async move {
             if flush_rx.await.is_ok() {
-                // worker::console_log!("spawnnning simple span processor");
                 let mut acc = Vec::with_capacity(64);
                 while let Ok(Some(Some(span))) = span_rx.try_next() {
-                    // worker::console_log!("cons {:?}", span.span_context.span_id());
                     acc.push(span);
                 }
 
