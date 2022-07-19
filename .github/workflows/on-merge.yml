@@ -93,7 +93,7 @@ jobs:
         NAME: "opentelemetry-datadog-cloudflare"
         VERSION_BUMP: ${{ steps.extract-version-labels.outputs.versionBump }}
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ secrets.WORKFLOW_TOKEN }}
         previews: 'ant-man-preview,flash-preview'
         script: |
           const ref = process.env.REF;
