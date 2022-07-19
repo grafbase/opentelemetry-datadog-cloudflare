@@ -39,6 +39,12 @@ prost = { version = "0.10", features = ["std"] }
 prost-build = { version = "0.10" }
 tonic-build = { version = "0.7", features = ["transport", "prost", "compression"] }
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+surf = { version = "2", default-features = false, features = ["wasm-client"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+surf = { version = "2", default-features = false, features = ["h1-client-rustls"] }
+
 [dev-dependencies]
 base64 = "0.13"
 bytes = "1"
