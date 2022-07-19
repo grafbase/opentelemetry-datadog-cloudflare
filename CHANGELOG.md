@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.11]
+
 -   Use workflow token to trigger deploy (bis)
 
 ## [0.1.10]
