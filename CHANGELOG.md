@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.9]
+
 -   Change to token to create a release
 
 ## [0.1.8]
