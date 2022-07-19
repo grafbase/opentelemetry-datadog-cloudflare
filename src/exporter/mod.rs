@@ -235,7 +235,8 @@ impl DatadogPipelineBuilder {
                 service_name,
                 endpoint.parse().map_err::<Error, _>(Into::into)?,
                 client,
-                self.api_key.unwrap(),
+                self.api_key
+                    .ok_or_else(|| TraceError::Other("APIKey not provied".into()))?,
             );
             Ok(exporter)
         } else {
@@ -282,8 +283,8 @@ impl DatadogPipelineBuilder {
     }
 
     #[must_use]
-    pub fn with_api_key<T: Into<String>>(mut self, key: T) -> Self {
-        self.api_key = Some(key.into());
+    pub fn with_api_key<T: Into<String>>(mut self, key: Option<T>) -> Self {
+        self.api_key = key.map(Into::into);
         self
     }
 

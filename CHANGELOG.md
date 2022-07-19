@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Feat
+
+- `with_api_key` take an option.
+
 ## [0.2.0]
 
 ### Misc
