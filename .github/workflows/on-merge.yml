@@ -129,7 +129,7 @@ jobs:
         echo "::set-output name=version-part::$VERSION_PART"
     - name: Create Release
       if: steps.extract-version-label.outputs.versionBump != 'beta'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v3
       env:
         VERSION: ${{ steps.push.outputs.version }}
         BODY: ${{ steps.extract-changelog.outputs.version-part }}
