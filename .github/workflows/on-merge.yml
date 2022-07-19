@@ -22,7 +22,7 @@ jobs:
       with:
         submodules: recursive
         ref: main
-        token: ${{ secrets.DEPLOY_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - uses: actions/setup-node@v1
       with:
