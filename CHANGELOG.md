@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.12]
+
 -   Fix deploy step
 
 ## [0.1.11]
