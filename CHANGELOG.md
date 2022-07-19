@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+-   Downgrade deployment Action
+
 ## [0.1.5]
 
 -   Change token for deployment
