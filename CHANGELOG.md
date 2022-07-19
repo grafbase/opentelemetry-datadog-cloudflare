@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.6]
+
 -   Downgrade deployment Action
 
 ## [0.1.5]
