@@ -1,6 +1,6 @@
 [package]
 name = "opentelemetry-datadog-cloudflare"
-version = "0.1.4"
+version = "0.1.5"
 description = "Datadog exporters and propagators for OpenTelemetry for Cloudflare workers"
 homepage = "https://github.com/grafbase/opentelemetry-datadog-cloudflare/"
 repository = "https://github.com/grafbase/opentelemetry-datadog-cloudflare/"

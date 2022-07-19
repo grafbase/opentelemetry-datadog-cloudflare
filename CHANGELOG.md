@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-- Change token for deployment
+## [0.1.5]
+
+-   Change token for deployment
 
 ## [0.1.4]
 
