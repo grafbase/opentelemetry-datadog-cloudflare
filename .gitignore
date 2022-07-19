@@ -1,0 +1,5 @@
+.DS_Store
+.idea
+bacon.toml
+node_modules
+target
