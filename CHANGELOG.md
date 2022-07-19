@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-- Update CI Merge
+## [0.1.3]
+
+-   Update CI Merge
 
 ## [0.1.2]
 
