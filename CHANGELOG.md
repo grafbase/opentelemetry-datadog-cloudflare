@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Change token for deployment
+
 ## [0.1.4]
 
 -   Update CI, remove preview to create deployment
