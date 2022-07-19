@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-- Update CI, remove preview to create deployment
+## [0.1.4]
+
+-   Update CI, remove preview to create deployment
 
 ## [0.1.3]
 
