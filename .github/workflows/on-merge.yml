@@ -134,7 +134,7 @@ jobs:
         VERSION: ${{ steps.push.outputs.version }}
         BODY: ${{ steps.extract-changelog.outputs.version-part }}
       with:
-        github-token: ${{ secrets.DEPLOY_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           await github.repos.createRelease({
             owner: context.repo.owner,
