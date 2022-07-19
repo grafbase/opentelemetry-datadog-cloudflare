@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+-   Downgrade the release creation
+
 ## [0.1.7]
 
 -   Solve the release creation
