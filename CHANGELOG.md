@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.8]
+
 -   Downgrade the release creation
 
 ## [0.1.7]
