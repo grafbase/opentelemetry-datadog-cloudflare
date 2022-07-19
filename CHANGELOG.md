@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Misc
+
+- Remove useless comments
+
 ## [0.1.12]
 
 -   Fix deploy step
