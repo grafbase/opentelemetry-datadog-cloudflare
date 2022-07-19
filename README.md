@@ -6,12 +6,9 @@
 
 ## Overview
 
-[`OpenTelemetry`] is a collection of tools, APIs, and SDKs used to instrument,
-generate, collect, and export telemetry data (metrics, logs, and traces) for
-analysis in order to understand your software's performance and behavior.
-
 This crate provides additional propagators and exporters for sending telemetry data
-to [`Datadog`](https://datadoghq.com) directly.
+to [`Datadog`](https://datadoghq.com) directly without going through the
+`Datadog-agent`.
 
 Based on [`opentelemetry-datadog`](https://github.com/open-telemetry/opentelemetry-rust/tree/main/opentelemetry-datadog).
 
