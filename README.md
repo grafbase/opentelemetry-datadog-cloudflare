@@ -19,6 +19,4 @@ Based on [`opentelemetry-datadog`](https://github.com/open-telemetry/opentelemet
 
 `opentelemetry-datadog-cloudflare` supports following features:
 
-- `reqwest-blocking-client`: use `reqwest` blocking http client to send spans.
-- `reqwest-client`: use `reqwest` http client to send spans.
 - `surf-client`: use `surf` http client to send spans.
