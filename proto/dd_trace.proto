@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package dd_trace;
 
-// TracePayload can represent either an older payload or a new one
+// `TracePayload` can represent either an older payload or a new one
 message TracePayload {
   // hostName specifies hostname of where the agent is running.
 	string hostName = 1;
