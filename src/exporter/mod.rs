@@ -55,6 +55,7 @@ pub struct DatadogExporter {
 }
 
 impl DatadogExporter {
+    #[allow(clippy::too_many_arguments)]
     fn new(
         service_name: String,
         request_url: Uri,
@@ -71,10 +72,10 @@ impl DatadogExporter {
             client,
             request_url,
             service_name,
-            key,
-            tags,
             env,
+            tags,
             host_name,
+            key,
             runtime_id,
             container_id,
             app_version,
@@ -349,28 +350,28 @@ impl DatadogPipelineBuilder {
         self
     }
 
-    /// Assign the host_name
+    /// Assign the `host_name`
     #[must_use]
     pub fn with_host_name(mut self, host_name: String) -> Self {
         self.host_name = Some(host_name);
         self
     }
 
-    /// Assign the runtime_id
+    /// Assign the `runtime_id`
     #[must_use]
     pub fn with_runtime_id(mut self, runtime_id: String) -> Self {
         self.runtime_id = Some(runtime_id);
         self
     }
 
-    /// Assign the container_id
+    /// Assign the `container_id`
     #[must_use]
     pub fn with_container_id(mut self, container_id: String) -> Self {
         self.container_id = Some(container_id);
         self
     }
 
-    /// Assign the app_version
+    /// Assign the `app_version`
     #[must_use]
     pub fn with_app_version(mut self, app_version: String) -> Self {
         self.app_version = Some(app_version);
