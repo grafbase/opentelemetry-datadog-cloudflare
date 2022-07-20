@@ -2,9 +2,11 @@
 
 ## [Unreleased]
 
+## [0.4.0]
+
 ### Feat
 
--  Add some utility functions to add some data to the root trace
+-   Add some utility functions to add some data to the root trace
 
 ## [0.3.0]
 
