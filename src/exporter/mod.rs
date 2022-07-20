@@ -27,7 +27,7 @@ use std::convert::TryInto;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::{Duration, SystemTime};
-use worker::Context;
+use worker::{console_log, Context};
 
 use crate::dd_proto;
 
@@ -538,7 +538,10 @@ impl trace::SpanExporter for DatadogExporter {
             .body(trace)
             .map_err::<Error, _>(Into::into)?;
 
-        self.client.send(req).await?;
+        let a = self.client.send(req).await;
+        console_log!("{:?}", a);
+        a?;
+
         Ok(())
     }
 }

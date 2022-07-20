@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Feat
+
+-   Update traces route
+
 ## [0.4.1]
 
 ### Misc
