@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Misc
+
+-   Clippy
+
 ## [0.4.0]
 
 ### Feat
