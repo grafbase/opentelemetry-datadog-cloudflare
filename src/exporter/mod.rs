@@ -24,7 +24,6 @@ use opentelemetry_semantic_conventions as semcov;
 use prost::Message;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::iter::FromIterator;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::{Duration, SystemTime};
@@ -37,6 +36,8 @@ const DEFAULT_DD_TRACES_PATH: &str = "api/v0.2/traces";
 const DEFAULT_DD_CONTENT_TYPE: &str = "application/x-protobuf";
 const DEFAULT_DD_API_KEY_HEADER: &str = "DD-Api-Key";
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// Datadog span exporter
 #[derive(Debug)]
 #[allow(clippy::module_name_repetitions)]
@@ -44,7 +45,13 @@ pub struct DatadogExporter {
     client: Box<dyn HttpClient>,
     request_url: Uri,
     service_name: String,
+    env: String,
+    tags: BTreeMap<String, String>,
+    host_name: String,
     key: String,
+    runtime_id: String,
+    container_id: String,
+    app_version: String,
 }
 
 impl DatadogExporter {
@@ -53,12 +60,24 @@ impl DatadogExporter {
         request_url: Uri,
         client: Box<dyn HttpClient>,
         key: String,
+        env: String,
+        tags: BTreeMap<String, String>,
+        host_name: String,
+        runtime_id: String,
+        container_id: String,
+        app_version: String,
     ) -> Self {
         DatadogExporter {
             client,
             request_url,
             service_name,
             key,
+            tags,
+            env,
+            host_name,
+            runtime_id,
+            container_id,
+            app_version,
         }
     }
 }
@@ -77,6 +96,12 @@ pub struct DatadogPipelineBuilder {
     api_key: Option<String>,
     trace_config: Option<sdk::trace::Config>,
     client: Option<Box<dyn HttpClient>>,
+    env: Option<String>,
+    tags: Option<BTreeMap<String, String>>,
+    host_name: Option<String>,
+    runtime_id: Option<String>,
+    container_id: Option<String>,
+    app_version: Option<String>,
 }
 
 impl Default for DatadogPipelineBuilder {
@@ -90,6 +115,12 @@ impl Default for DatadogPipelineBuilder {
             client: None,
             #[cfg(feature = "surf-client")]
             client: Some(Box::new(surf::Client::new())),
+            env: None,
+            tags: None,
+            host_name: None,
+            runtime_id: None,
+            container_id: None,
+            app_version: None,
         }
     }
 }
@@ -237,6 +268,12 @@ impl DatadogPipelineBuilder {
                 client,
                 self.api_key
                     .ok_or_else(|| TraceError::Other("APIKey not provied".into()))?,
+                self.env.unwrap_or_default(),
+                self.tags.unwrap_or_default(),
+                self.host_name.unwrap_or_default(),
+                self.runtime_id.unwrap_or_default(),
+                self.container_id.unwrap_or_default(),
+                self.app_version.unwrap_or_default(),
             );
             Ok(exporter)
         } else {
@@ -302,6 +339,48 @@ impl DatadogPipelineBuilder {
     #[must_use]
     pub fn with_trace_config(mut self, config: sdk::trace::Config) -> Self {
         self.trace_config = Some(config);
+        self
+    }
+
+    /// Assign the env
+    #[must_use]
+    pub fn with_env(mut self, env: String) -> Self {
+        self.env = Some(env);
+        self
+    }
+
+    /// Assign the host_name
+    #[must_use]
+    pub fn with_host_name(mut self, host_name: String) -> Self {
+        self.host_name = Some(host_name);
+        self
+    }
+
+    /// Assign the runtime_id
+    #[must_use]
+    pub fn with_runtime_id(mut self, runtime_id: String) -> Self {
+        self.runtime_id = Some(runtime_id);
+        self
+    }
+
+    /// Assign the container_id
+    #[must_use]
+    pub fn with_container_id(mut self, container_id: String) -> Self {
+        self.container_id = Some(container_id);
+        self
+    }
+
+    /// Assign the app_version
+    #[must_use]
+    pub fn with_app_version(mut self, app_version: String) -> Self {
+        self.app_version = Some(app_version);
+        self
+    }
+
+    /// Assign the tags
+    #[must_use]
+    pub fn with_tags(mut self, tags: BTreeMap<String, String>) -> Self {
+        self.tags = Some(tags);
         self
     }
 }
@@ -392,34 +471,36 @@ fn trace_into_chunk(spans: Vec<dd_proto::Span>) -> dd_proto::TraceChunk {
         priority: 100i32,
         origin: "lambda".to_string(),
         spans,
-        tags: BTreeMap::from_iter(vec![("a".to_string(), "b".to_string())]),
+        tags: BTreeMap::new(),
         dropped_trace: false,
     }
 }
 
-fn trace_into_tracer(chunks: Vec<dd_proto::TraceChunk>) -> dd_proto::TracerPayload {
-    dd_proto::TracerPayload {
-        container_id: "an_id".to_string(),
-        language_name: "rust".to_string(),
-        language_version: "1.62.0".to_string(),
-        tracer_version: "v1.0.0".to_string(),
-        runtime_id: "c6840ca0-3241-4005-8d7b-46d9f3923bd6".to_string(),
-        chunks,
-        app_version: "v1.0.0".to_string(),
+impl DatadogExporter {
+    fn trace_into_tracer(&self, chunks: Vec<dd_proto::TraceChunk>) -> dd_proto::TracerPayload {
+        dd_proto::TracerPayload {
+            container_id: self.container_id.clone(),
+            language_name: "rust".to_string(),
+            language_version: String::new(),
+            tracer_version: VERSION.to_string(),
+            runtime_id: self.runtime_id.clone(),
+            chunks,
+            app_version: self.app_version.clone(),
+        }
     }
-}
 
-fn trace_build(tracer: Vec<dd_proto::TracerPayload>) -> dd_proto::TracePayload {
-    dd_proto::TracePayload {
-        host_name: "prod".to_string(),
-        env: "agriffon".to_string(),
-        traces: vec![],
-        transactions: vec![],
-        tracer_payloads: tracer,
-        tags: BTreeMap::from_iter(vec![("a".to_string(), "b".to_string())]),
-        agent_version: "1.0.1".to_string(),
-        target_tps: 1f64,
-        error_tps: 1f64,
+    fn trace_build(&self, tracer: Vec<dd_proto::TracerPayload>) -> dd_proto::TracePayload {
+        dd_proto::TracePayload {
+            host_name: self.host_name.clone(),
+            env: self.env.clone(),
+            traces: vec![],
+            transactions: vec![],
+            tracer_payloads: tracer,
+            tags: self.tags.clone(),
+            agent_version: VERSION.to_string(),
+            target_tps: 1000f64,
+            error_tps: 1000f64,
+        }
     }
 }
 
@@ -442,9 +523,9 @@ impl trace::SpanExporter for DatadogExporter {
             })
             .collect();
 
-        let traces = trace_into_tracer(chunks);
+        let traces = self.trace_into_tracer(chunks);
 
-        let trace = trace_build(vec![traces]);
+        let trace = self.trace_build(vec![traces]);
         let trace = trace.encode_to_vec();
 
         let req = Request::builder()

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Feat
+
+-  Add some utility functions to add some data to the root trace
+
 ## [0.3.0]
 
 ### Feat
