@@ -2,9 +2,11 @@
 
 ## [Unreleased]
 
+## [0.5.0]
+
 ### Feat
 
-- Upgrade worker-rs to `v0.0.10`
+-   Upgrade worker-rs to `v0.0.10`
 
 ## [0.4.1]
 
