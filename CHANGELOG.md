@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+-   Upgrade worker-rs to `v0.0.12`
+
 ## [0.6.0]
 
 -   Upgrade worker-rs to `v0.0.11`
