@@ -21,11 +21,11 @@ rustdoc-args = ["--cfg", "docsrs"]
 surf-client = ["surf", "opentelemetry-http/surf"]
 
 [dependencies]
-async-trait = "0.1"
 futures-channel = { version = "0.3" }
-opentelemetry = { version = "0.17", features = ["trace"] }
-opentelemetry-http = { version = "0.6" }
-opentelemetry-semantic-conventions = { version = "0.9" }
+futures-util = "0.3"
+opentelemetry = { version = "0.18", features = ["trace"] }
+opentelemetry-http = { version = "0.7" }
+opentelemetry-semantic-conventions = { version = "0.10" }
 rmp = "0.8"
 surf = { version = "2.0", default-features = false, optional = true }
 thiserror = "1.0"
@@ -33,11 +33,11 @@ itertools = "0.10"
 http = "0.2"
 lazy_static = "1.4"
 worker = "0.0.12"
-prost = { version = "0.10", features = ["std"] }
+prost = { version = "0.11", features = ["std"] }
 
 [build-dependencies]
-prost-build = { version = "0.10" }
-tonic-build = { version = "0.7", features = ["transport", "prost", "compression"] }
+prost-build = { version = "0.11" }
+tonic-build = { version = "0.8", features = ["transport", "prost"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 surf = { version = "2", default-features = false, features = ["wasm-client"] }
@@ -50,4 +50,4 @@ base64 = "0.13"
 bytes = "1"
 futures-util = { version = "0.3", features = ["io"] }
 isahc = "1.4"
-opentelemetry = { features = ["trace", "testing"] }
+opentelemetry = { version = "0.18", features = ["trace", "testing"] }
