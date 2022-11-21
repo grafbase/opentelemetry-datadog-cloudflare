@@ -23,7 +23,7 @@ surf-client = ["surf", "opentelemetry-http/surf"]
 [dependencies]
 async-trait = "0.1"
 futures-channel = { version = "0.3" }
-opentelemetry = { version = "0.17", features = ["trace"] }
+opentelemetry = { version = "0.18", features = ["trace"] }
 opentelemetry-http = { version = "0.6" }
 opentelemetry-semantic-conventions = { version = "0.9" }
 rmp = "0.8"
