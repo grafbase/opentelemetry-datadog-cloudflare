@@ -25,7 +25,7 @@ async-trait = "0.1"
 futures-channel = { version = "0.3" }
 opentelemetry = { version = "0.17", features = ["trace"] }
 opentelemetry-http = { version = "0.6" }
-opentelemetry-semantic-conventions = { version = "0.9" }
+opentelemetry-semantic-conventions = { version = "0.10" }
 rmp = "0.8"
 surf = { version = "2.0", default-features = false, optional = true }
 thiserror = "1.0"
