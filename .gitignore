@@ -3,3 +3,4 @@
 bacon.toml
 node_modules
 target
+Cargo.lock
