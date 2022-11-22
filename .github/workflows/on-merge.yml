@@ -24,7 +24,7 @@ jobs:
         ref: main
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: actions/setup-node@v1
+    - uses: actions/setup-node@v3
       with:
         node-verion: '12.x'
 
