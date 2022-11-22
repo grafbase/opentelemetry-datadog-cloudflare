@@ -12,7 +12,7 @@ jobs:
     steps:
     - name: Check if version label is present
       id: version
-      uses: actions/github-script@v2
+      uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
