@@ -512,7 +512,7 @@ async fn send_request(
     request: http::Request<Vec<u8>>,
 ) -> trace::ExportResult {
     use opentelemetry_http::ResponseExt;
-    let _ = client.send(request).await?.error_for_status()?;
+    client.send(request).await?.error_for_status()?;
     Ok(())
 }
 
