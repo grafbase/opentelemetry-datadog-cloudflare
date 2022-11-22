@@ -49,5 +49,5 @@ surf = { version = "2", default-features = false, features = ["h1-client-rustls"
 base64 = "0.13"
 bytes = "1"
 futures-util = { version = "0.3", features = ["io"] }
-isahc = "1.4"
+isahc = "1.7"
 opentelemetry = { version = "0.18", features = ["trace", "testing"] }
