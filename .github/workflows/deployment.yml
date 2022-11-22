@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install dependencies
+      run: sudo apt install --assume-yes --no-install-recommends protobuf-compiler libprotobuf-dev
+
     - name: Update deployment status
       uses: actions/github-script@v3
       env:
