@@ -13,7 +13,7 @@ jobs:
       run: sudo apt install --assume-yes --no-install-recommends protobuf-compiler libprotobuf-dev
 
     - name: Update deployment status
-      uses: actions/github-script@v3
+      uses: actions/github-script@v6
       env:
         NAME: ${{ github.event.deployment.payload.name }}
         VERSION: ${{ github.event.deployment.payload.version }}
@@ -66,7 +66,7 @@ jobs:
         args: --features surf-client
 
     - name: Update deployment status
-      uses: actions/github-script@v3
+      uses: actions/github-script@v6
       env:
         NAME: ${{ github.event.deployment.payload.name }}
         VERSION: ${{ github.event.deployment.payload.version }}
