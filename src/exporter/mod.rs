@@ -1,8 +1,8 @@
 mod model;
 
+use futures_util::future::BoxFuture;
 pub use model::Error;
 
-use async_trait::async_trait;
 use futures_channel::{mpsc, oneshot};
 use http::{Method, Request, Uri};
 use itertools::Itertools;
@@ -16,12 +16,13 @@ use opentelemetry::sdk::trace::Span;
 use opentelemetry::sdk::trace::SpanProcessor;
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::{SpanId, TraceResult};
-use opentelemetry::trace::{StatusCode, TraceError};
+use opentelemetry::trace::{Status, TraceError};
 use opentelemetry::Key;
 use opentelemetry::{global, sdk, trace::TracerProvider, KeyValue};
 use opentelemetry_http::HttpClient;
 use opentelemetry_semantic_conventions as semcov;
 use prost::Message;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::sync::Arc;
@@ -42,7 +43,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 #[derive(Debug)]
 #[allow(clippy::module_name_repetitions)]
 pub struct DatadogExporter {
-    client: Box<dyn HttpClient>,
+    client: Arc<dyn HttpClient>,
     request_url: Uri,
     service_name: String,
     env: String,
@@ -59,7 +60,7 @@ impl DatadogExporter {
     fn new(
         service_name: String,
         request_url: Uri,
-        client: Box<dyn HttpClient>,
+        client: Arc<dyn HttpClient>,
         key: String,
         env: String,
         tags: BTreeMap<String, String>,
@@ -96,7 +97,7 @@ pub struct DatadogPipelineBuilder {
     agent_endpoint: String,
     api_key: Option<String>,
     trace_config: Option<sdk::trace::Config>,
-    client: Option<Box<dyn HttpClient>>,
+    client: Option<Arc<dyn HttpClient>>,
     env: Option<String>,
     tags: Option<BTreeMap<String, String>>,
     host_name: Option<String>,
@@ -115,7 +116,7 @@ impl Default for DatadogPipelineBuilder {
             #[cfg(not(feature = "surf-client"))]
             client: None,
             #[cfg(feature = "surf-client")]
-            client: Some(Box::new(surf::Client::new())),
+            client: Some(Arc::new(surf::Client::new())),
             env: None,
             tags: None,
             host_name: None,
@@ -224,18 +225,19 @@ impl DatadogPipelineBuilder {
         let service_name = self.service_name.take();
         if let Some(service_name) = service_name {
             let config = if let Some(mut cfg) = self.trace_config.take() {
-                cfg.resource = cfg.resource.map(|r| {
-                    let without_service_name = r
+                cfg.resource = {
+                    let without_service_name = cfg
+                        .resource
                         .iter()
                         .filter(|(k, _v)| **k != semcov::resource::SERVICE_NAME)
                         .map(|(k, v)| KeyValue::new(k.clone(), v.clone()))
                         .collect::<Vec<KeyValue>>();
-                    Arc::new(Resource::new(without_service_name))
-                });
+                    Cow::Owned(Resource::new(without_service_name))
+                };
                 cfg
             } else {
                 Config {
-                    resource: Some(Arc::new(Resource::empty())),
+                    resource: Cow::Owned(Resource::empty()),
                     ..Default::default()
                 }
             };
@@ -249,7 +251,7 @@ impl DatadogPipelineBuilder {
             (
                 Config {
                     // use a empty resource to prevent TracerProvider to assign a service name.
-                    resource: Some(Arc::new(Resource::empty())),
+                    resource: Cow::Owned(Resource::empty()),
                     ..Default::default()
                 },
                 service_name,
@@ -330,7 +332,7 @@ impl DatadogPipelineBuilder {
     #[must_use]
     pub fn with_http_client<T: HttpClient + 'static>(
         mut self,
-        client: Box<dyn HttpClient>,
+        client: Arc<dyn HttpClient>,
     ) -> Self {
         self.client = Some(client);
         self
@@ -451,9 +453,9 @@ fn trace_into_dd_tracer_payload(exporter: &DatadogExporter, trace: SpanData) -> 
         trace_id: t0,
         span_id,
         parent_id,
-        error: match trace.status_code {
-            StatusCode::Unset | StatusCode::Ok => 0,
-            StatusCode::Error => 1,
+        error: match trace.status {
+            Status::Unset | Status::Ok => 0,
+            Status::Error { .. } => 1,
         },
         start,
         duration,
@@ -505,11 +507,19 @@ impl DatadogExporter {
     }
 }
 
-#[async_trait]
+async fn send_request(
+    client: Arc<dyn HttpClient>,
+    request: http::Request<Vec<u8>>,
+) -> trace::ExportResult {
+    use opentelemetry_http::ResponseExt;
+    client.send(request).await?.error_for_status()?;
+    Ok(())
+}
+
 impl trace::SpanExporter for DatadogExporter {
     /// Export spans to datadog
     // TODO: Should split & batch them when it's too big, check Vector reference.
-    async fn export(&mut self, batch: Vec<SpanData>) -> trace::ExportResult {
+    fn export(&mut self, batch: Vec<SpanData>) -> BoxFuture<'static, trace::ExportResult> {
         let traces: Vec<Vec<SpanData>> = group_into_traces(batch);
 
         let chunks: Vec<dd_proto::TraceChunk> = traces
@@ -529,16 +539,21 @@ impl trace::SpanExporter for DatadogExporter {
         let trace = self.trace_build(vec![traces]);
         let trace = trace.encode_to_vec();
 
-        let req = Request::builder()
+        let req = match Request::builder()
             .method(Method::POST)
             .uri(self.request_url.clone())
             .header(http::header::CONTENT_TYPE, DEFAULT_DD_CONTENT_TYPE)
             .header("X-Datadog-Reported-Languages", "rust")
             .header(DEFAULT_DD_API_KEY_HEADER, self.key.clone())
             .body(trace)
-            .map_err::<Error, _>(Into::into)?;
+            .map_err(Error::from)
+            .map_err(TraceError::from)
+        {
+            Err(err) => return Box::pin(futures_util::future::ready(Err(err))),
+            Ok(req) => req,
+        };
 
-        self.client.send(req).await?;
-        Ok(())
+        let client = self.client.clone();
+        Box::pin(send_request(client, req))
     }
 }

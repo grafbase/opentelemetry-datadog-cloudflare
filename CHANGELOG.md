@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+-   Upgrade opentelemetry to `v0.18`
+
 ## [0.7.0]
 
 -   Upgrade worker-rs to `v0.0.12`
