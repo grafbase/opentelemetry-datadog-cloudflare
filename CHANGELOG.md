@@ -2,8 +2,6 @@
 
 ## [Unreleased]
 
-## [0.8.0]
-
 -   Upgrade opentelemetry to `v0.18`
 
 ## [0.7.0]
