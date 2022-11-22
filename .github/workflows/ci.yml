@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: sudo apt install --assume-yes --no-install-recommends protobuf-compiler
+        run: sudo apt install --assume-yes --no-install-recommends protobuf-compiler libprotobuf-dev
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: sudo apt install --assume-yes --no-install-recommends protobuf-compiler
+        run: sudo apt install --assume-yes --no-install-recommends protobuf-compiler libprotobuf-dev
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
