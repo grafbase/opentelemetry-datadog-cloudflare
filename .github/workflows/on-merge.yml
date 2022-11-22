@@ -65,12 +65,10 @@ jobs:
         npm install -g semver
         OLD_VERSION=$(cat Cargo.toml | grep "version" | head -n 1 | cut -d'"' -f2)
         NEW_VERSION=$(semver -i $BUMP_TYPE $OLD_VERSION)
-        LINE_NUMBER_CARGO=$( grep -n 'name = "opentelemetry-datadog-cloudflare"' Cargo.lock | cut -d ':' -f1 | awk '{ SUM = 1 + $1} END { print SUM }')
-        sed -i $LINE_NUMBER_CARGO's/version = "'"$OLD_VERSION"'"/version = "'"$NEW_VERSION"'"/' Cargo.lock
         sed -i '0,/version.*$/s/version = "'"$OLD_VERSION"'"/version = "'"$NEW_VERSION"'"/' Cargo.toml
         npm add --no-save remark-cli@^6.0.0 @jarrodldavis/remark-changelog-version-bump@^0.1.1
         ./node_modules/.bin/remark CHANGELOG.md -o --use @jarrodldavis/changelog-version-bump=version:\"$NEW_VERSION\"
-        git add CHANGELOG.md Cargo.toml Cargo.lock
+        git add CHANGELOG.md Cargo.toml
         git commit -m "$NEW_VERSION"
         git tag "v$NEW_VERSION"
     - name: Push on main
