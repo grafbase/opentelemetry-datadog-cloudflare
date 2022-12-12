@@ -46,7 +46,7 @@ surf = { version = "2", default-features = false, features = ["wasm-client"] }
 surf = { version = "2", default-features = false, features = ["h1-client-rustls"] }
 
 [dev-dependencies]
-base64 = "0.13"
+base64 = "0.20"
 bytes = "1"
 futures-util = { version = "0.3", features = ["io"] }
 isahc = "1"
