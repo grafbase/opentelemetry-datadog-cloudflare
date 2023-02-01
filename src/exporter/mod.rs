@@ -3,7 +3,7 @@ mod model;
 use futures_util::future::BoxFuture;
 pub use model::Error;
 
-use futures_channel::{mpsc, oneshot};
+use futures_channel::mpsc;
 use http::{Method, Request, Uri};
 use itertools::Itertools;
 use opentelemetry::global::GlobalTracerProvider;
@@ -134,30 +134,25 @@ impl Default for DatadogPipelineBuilder {
 #[derive(Debug)]
 pub struct WASMWorkerSpanProcessor {
     sender: RwLock<mpsc::Sender<Option<SpanData>>>,
-    flush: RwLock<Option<oneshot::Sender<()>>>,
 }
 
 impl WASMWorkerSpanProcessor {
     pub(crate) fn new(mut exporter: Box<dyn trace::SpanExporter>, ctx: &Context) -> Self {
         let (span_tx, mut span_rx) = mpsc::channel::<Option<SpanData>>(256);
-        let (flush_tx, flush_rx) = oneshot::channel();
 
         ctx.wait_until(async move {
-            if flush_rx.await.is_ok() {
-                let mut acc = Vec::with_capacity(64);
-                while let Ok(Some(Some(span))) = span_rx.try_next() {
-                    acc.push(span);
-                }
+            let mut acc = Vec::with_capacity(64);
+            while let Ok(Some(Some(span))) = span_rx.try_next() {
+                acc.push(span);
+            }
 
-                if let Err(err) = exporter.export(acc).await {
-                    global::handle_error(err);
-                }
+            if let Err(err) = exporter.export(acc).await {
+                global::handle_error(err);
             }
         });
 
         WASMWorkerSpanProcessor {
             sender: RwLock::new(span_tx),
-            flush: RwLock::new(Some(flush_tx)),
         }
     }
 }
@@ -182,20 +177,6 @@ impl SpanProcessor for WASMWorkerSpanProcessor {
     }
 
     fn force_flush(&self) -> TraceResult<()> {
-        // Need to be called as we are in a worker context, we don't want to send the spans too
-        // early, we should wait for the main application to be finished before doing this.
-        let mut lock = match self.flush.write() {
-            Ok(a) => a,
-            Err(err) => {
-                global::handle_error(TraceError::from(format!("error processing span {:?}", err)));
-                return Err(TraceError::from(format!("error processing span {:?}", err)));
-            }
-        };
-
-        if let Some(sender) = lock.take() {
-            let _ = sender.send(());
-        }
-
         Ok(())
     }
 
