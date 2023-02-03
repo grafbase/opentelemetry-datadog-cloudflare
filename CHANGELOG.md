@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Drop the `worker::Context` on `DatadogPipelineBuilder::install`
+- Bridge `SpanProcessor` to async through `spawn_local` on `force_flush` and `on_end`
+- Downgrade opentelemetry to `v0.17` due to memory access errors on cloudflare workers
+
 ## [0.9.0]
 
 ## [0.8.0]
