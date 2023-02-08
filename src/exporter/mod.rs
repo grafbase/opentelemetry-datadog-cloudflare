@@ -1,11 +1,10 @@
 mod model;
 
+use async_trait::async_trait;
 use futures_util::lock::Mutex;
-use futures_util::Stream;
 use http::{Method, Request, Uri};
 use itertools::Itertools;
 pub use model::Error;
-use opentelemetry::global::GlobalTracerProvider;
 use opentelemetry::sdk::export::trace;
 use opentelemetry::sdk::export::trace::{SpanData, SpanExporter};
 use opentelemetry::sdk::resource::ResourceDetector;
@@ -16,16 +15,17 @@ use opentelemetry::sdk::trace::SpanProcessor;
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::{SpanId, TraceResult};
 use opentelemetry::trace::{StatusCode, TraceError};
-use opentelemetry::Key;
-use opentelemetry::{global, sdk, trace::TracerProvider, KeyValue};
+use opentelemetry::{global, Key};
+use opentelemetry::{sdk, trace::TracerProvider, KeyValue};
 use opentelemetry_http::HttpClient;
 use opentelemetry_semantic_conventions as semcov;
 use prost::Message;
+use std::any::Any;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime};
-use worker::wasm_bindgen_futures::spawn_local;
+use worker::console_log;
 
 use crate::dd_proto;
 
@@ -131,28 +131,61 @@ impl Default for DatadogPipelineBuilder {
 }
 
 /// A [`SpanProcessor`] that exports asynchronously when asked to do it.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[allow(clippy::type_complexity)]
 pub struct WASMWorkerSpanProcessor {
-    sink: Arc<Mutex<futures_channel::mpsc::Sender<Option<SpanData>>>>,
-    flush: Arc<
-        Mutex<(
-            futures_channel::mpsc::Receiver<Option<SpanData>>,
-            Box<dyn SpanExporter>,
-        )>,
-    >,
+    spans: RwLock<Vec<SpanData>>,
+    exporter: Arc<Mutex<Box<dyn SpanExporter>>>,
     flush_size: usize,
 }
 
 impl WASMWorkerSpanProcessor {
     pub(crate) fn new(exporter: Box<dyn SpanExporter>, flush_size: usize) -> Self {
-        let (span_tx, span_rx) = futures_channel::mpsc::channel::<Option<SpanData>>(flush_size);
-
         WASMWorkerSpanProcessor {
-            sink: Arc::new(Mutex::new(span_tx)),
-            flush: Arc::new(Mutex::new((span_rx, exporter))),
+            spans: RwLock::new(Vec::with_capacity(flush_size)),
+            exporter: Arc::new(Mutex::new(exporter)),
             flush_size,
         }
+    }
+}
+
+#[async_trait]
+pub trait SpanProcessExt {
+    async fn force_flush(&self) -> TraceResult<()>;
+}
+
+#[async_trait]
+impl SpanProcessExt for WASMWorkerSpanProcessor {
+    async fn force_flush(&self) -> TraceResult<()> {
+        let to_export = {
+            let mut lock = match self.spans.write() {
+                Ok(l) => l,
+                Err(e) => {
+                    global::handle_error(e);
+                    return Err(TraceError::from("unable to obtain lock to flush"))
+                }
+            };
+
+            let export_size = if lock.len() > self.flush_size {
+                self.flush_size
+            } else {
+                lock.len()
+            };
+
+            lock.drain(0..export_size).collect::<Vec<_>>()
+        };
+
+        for span in &to_export {
+            console_log!("Exporting: {:?}", span);
+        }
+
+        let mut exporter = self.exporter.lock().await;
+
+        let res = exporter.export(to_export).await;
+
+        console_log!("Exported");
+
+        res
     }
 }
 
@@ -162,40 +195,19 @@ impl SpanProcessor for WASMWorkerSpanProcessor {
     }
 
     fn on_end(&self, span: SpanData) {
-        let sink = Arc::clone(&self.sink);
-
-        spawn_local(async move {
-            let mut lock = sink.lock().await;
-
-            if let Err(e) = lock.try_send(Some(span)) {
-                global::handle_error(TraceError::from(format!(
-                    "error sending span to sink: {:?}",
-                    e
-                )));
+        console_log!("on_end");
+        let mut lock = match self.spans.write() {
+            Ok(l) => l,
+            Err(e) => {
+                global::handle_error(e);
+                return;
             }
-        });
+        };
+
+        lock.push(span);
     }
 
     fn force_flush(&self) -> TraceResult<()> {
-        let flush = Arc::clone(&self.flush);
-        let flush_size = self.flush_size;
-
-        spawn_local(async move {
-            let mut lock = flush.lock().await;
-
-            let mut to_flush = Vec::with_capacity(lock.0.size_hint().0);
-            while let Ok(Some(Some(span))) = lock.0.try_next() {
-                to_flush.push(span);
-
-                // bail when reaching the cap
-                if to_flush.len() > flush_size {
-                    break;
-                }
-            }
-
-            let _export_result = lock.1.export(to_flush).await;
-        });
-
         Ok(())
     }
 
@@ -205,6 +217,10 @@ impl SpanProcessor for WASMWorkerSpanProcessor {
         //
         // TODO: Better handle it later.
         Ok(())
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -289,12 +305,20 @@ impl DatadogPipelineBuilder {
     /// # Errors
     ///
     /// If the Endpoint or the `APIKey` are not properly set.
-    pub fn install(mut self) -> Result<(sdk::trace::Tracer, GlobalTracerProvider), TraceError> {
+    /// Install the Datadog worker trace exporter pipeline using a simple span processor.
+    ///
+    /// # Errors
+    ///
+    /// If the Endpoint or the `APIKey` are not properly set.
+    pub fn install(
+        mut self,
+    ) -> Result<(sdk::trace::Tracer, sdk::trace::TracerProvider), TraceError> {
         let (config, service_name) = self.build_config_and_service_name();
         let exporter = self.build_exporter_with_service_name(service_name)?;
         let flush_size = exporter.flush_size;
-        let mut provider_builder = sdk::trace::TracerProvider::builder()
-            .with_span_processor(WASMWorkerSpanProcessor::new(Box::new(exporter), flush_size));
+        let span_processor = WASMWorkerSpanProcessor::new(Box::new(exporter), flush_size);
+        let mut provider_builder =
+            sdk::trace::TracerProvider::builder().with_span_processor(span_processor);
         provider_builder = provider_builder.with_config(config);
         let provider = provider_builder.build();
         let tracer = provider.versioned_tracer(
@@ -302,8 +326,8 @@ impl DatadogPipelineBuilder {
             Some(env!("CARGO_PKG_VERSION")),
             None,
         );
-        let p = global::set_tracer_provider(provider);
-        Ok((tracer, p))
+
+        Ok((tracer, provider))
     }
 
     /// Assign the service name under which to group traces

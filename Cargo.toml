@@ -37,6 +37,9 @@ lazy_static = "1"
 worker = "0.0.12"
 prost = { version = "0.11", features = ["std"] }
 
+[patch.crates-io]
+opentelemetry = { git = "https://github.com/hfgbarrigas/opentelemetry-rust.git", branch = "v0.17.0-patch" }
+
 [build-dependencies]
 prost-build = { version = "0.11" }
 tonic-build = { version = "0.8", features = ["transport", "prost"] }
