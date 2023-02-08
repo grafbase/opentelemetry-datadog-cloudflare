@@ -40,7 +40,9 @@
 //! sure the http client is running in appropriate runime.
 //!
 //! Users can always use their own http clients by implementing `HttpClient` trait.
-//!
+
+#![deny(unused_crate_dependencies)]
+
 pub(crate) mod dd_proto {
     include!(concat!(env!("OUT_DIR"), "/dd_trace.rs"));
 }
