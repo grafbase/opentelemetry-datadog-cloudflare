@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+-   Upgrade worker to `v0.0.13`
+-   Remove unused dependencies from Cargo.toml
+
 ## [1.0.0]
 
 -   Drop the `worker::Context` on `DatadogPipelineBuilder::install`
@@ -16,17 +19,17 @@
 
 ## [0.7.0]
 
--   Upgrade worker-rs to `v0.0.12`
+-   Upgrade worker to `v0.0.12`
 
 ## [0.6.0]
 
--   Upgrade worker-rs to `v0.0.11`
+-   Upgrade worker to `v0.0.11`
 
 ## [0.5.0]
 
 ### Feat
 
--   Upgrade worker-rs to `v0.0.10`
+-   Upgrade worker to `v0.0.10`
 
 ## [0.4.1]
 
