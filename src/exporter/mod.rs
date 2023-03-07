@@ -25,7 +25,6 @@ use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime};
-use worker::console_log;
 
 use crate::dd_proto;
 
@@ -175,17 +174,9 @@ impl SpanProcessExt for WASMWorkerSpanProcessor {
             lock.drain(0..export_size).collect::<Vec<_>>()
         };
 
-        for span in &to_export {
-            console_log!("Exporting: {:?}", span);
-        }
-
         let mut exporter = self.exporter.lock().await;
 
-        let res = exporter.export(to_export).await;
-
-        console_log!("Exported");
-
-        res
+        exporter.export(to_export).await
     }
 }
 
@@ -195,7 +186,6 @@ impl SpanProcessor for WASMWorkerSpanProcessor {
     }
 
     fn on_end(&self, span: SpanData) {
-        console_log!("on_end");
         let mut lock = match self.spans.write() {
             Ok(l) => l,
             Err(e) => {
@@ -208,7 +198,7 @@ impl SpanProcessor for WASMWorkerSpanProcessor {
     }
 
     fn force_flush(&self) -> TraceResult<()> {
-        Ok(())
+        Err(TraceError::from("Sync flush is not supported, use `force_flush` from `SpanProcessExt`"))
     }
 
     fn shutdown(&mut self) -> TraceResult<()> {
