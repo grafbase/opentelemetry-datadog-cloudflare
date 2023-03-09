@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 
-## [1.0.0]
+-   Add an extension that provides an async `force_flush`
+-   Replace the `spawn_local` approach with the async `force_flush`
+-   Yank `1.0.0` release
+
+## [1.0.0] (*YANKED*)
 
 -   Drop the `worker::Context` on `DatadogPipelineBuilder::install`
 -   Bridge `SpanProcessor` to async through `spawn_local` on `force_flush` and `on_end`
