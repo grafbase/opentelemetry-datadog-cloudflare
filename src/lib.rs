@@ -293,5 +293,8 @@ mod propagator {
     }
 }
 
-pub use exporter::{new_pipeline, DatadogExporter, DatadogPipelineBuilder, Error};
+pub use exporter::{
+    new_pipeline, DatadogExporter, DatadogPipelineBuilder, Error, SpanProcessExt,
+    WASMWorkerSpanProcessor,
+};
 pub use propagator::DatadogPropagator;
