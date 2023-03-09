@@ -234,7 +234,7 @@ impl DatadogPipelineBuilder {
                 cfg.resource = cfg.resource.map(|r| {
                     let without_service_name = r
                         .iter()
-                        .filter(|(k, _v)| **k != semcov::resource::SERVICE_NAME)
+                        .filter(|(k, _v)| **k != Key::new(semcov::resource::SERVICE_NAME.to_string()))
                         .map(|(k, v)| KeyValue::new(k.clone(), v.clone()))
                         .collect::<Vec<KeyValue>>();
                     Arc::new(Resource::new(without_service_name))
@@ -250,7 +250,7 @@ impl DatadogPipelineBuilder {
         } else {
             let service_name = SdkProvidedResourceDetector
                 .detect(Duration::from_secs(0))
-                .get(semcov::resource::SERVICE_NAME)
+                .get(Key::new(semcov::resource::SERVICE_NAME.to_string()))
                 .unwrap()
                 .to_string();
             (
