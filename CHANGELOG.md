@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.10.0]
+
 -   Add an extension that provides an async `force_flush`
 -   Use `opentelemetry-spanprocessor-any` crate in favour of `opentelemetry` to have the `Any` patch available 
 
