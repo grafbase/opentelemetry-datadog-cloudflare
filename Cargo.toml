@@ -25,7 +25,7 @@ async-trait = "0.1"
 futures-channel = { version = "0.3" }
 futures-util = "0.3"
 # don't bump to 0.18, it leads to memory access out of bounds in cloudflare workers
-opentelemetry = { version = "0.17", features = ["trace"] }
+opentelemetry = { version = "0.18", features = ["trace"] }
 opentelemetry-http = { version = "0.6" }
 opentelemetry-semantic-conventions = { version = "0.9" }
 rmp = "0.8"
@@ -52,4 +52,4 @@ base64 = "0.13"
 bytes = "1"
 futures-util = { version = "0.3", features = ["io"] }
 isahc = "1"
-opentelemetry = { version = "0.17", features = ["trace", "testing"] }
+opentelemetry = { version = "0.18", features = ["trace", "testing"] }
