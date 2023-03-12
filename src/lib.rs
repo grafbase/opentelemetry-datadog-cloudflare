@@ -33,7 +33,7 @@
 //!
 //! Users can choose appropriate http clients to align with their runtime.
 //!
-//! Based on the feature enabled. The only client available is surf, feel free to implement
+//! Based on the feature enabled. The only client available is reqwest, feel free to implement
 //! other http clients.
 //!
 //! Note that async http clients may need specific runtime otherwise it will panic. User should make

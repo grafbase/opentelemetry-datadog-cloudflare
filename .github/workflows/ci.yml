@@ -22,7 +22,7 @@ jobs:
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --features surf-client
+          args: --features reqwest-client
   build_and_test:
     name: Build CI
     runs-on: ubuntu-latest
@@ -35,8 +35,8 @@ jobs:
           toolchain: stable
           components: clippy
           profile: minimal
-      - name: Check with surf-client
-        run: cargo check --features surf-client
+      - name: Check with reqwest-client
+        run: cargo check --features reqwest-client
       - name: Clean
         run: cargo clean
 

@@ -63,7 +63,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: publish
-        args: --features surf-client
+        args: --features reqwest-client
 
     - name: Update deployment status
       uses: actions/github-script@v3

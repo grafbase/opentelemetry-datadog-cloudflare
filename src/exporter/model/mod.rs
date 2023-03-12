@@ -7,7 +7,7 @@ pub enum Error {
     #[error("message pack error")]
     MessagePackError,
     /// No http client founded. User should provide one or enable features
-    #[error("http client must be set, users can enable reqwest or surf feature to use http client implementation within create")]
+    #[error("http client must be set, users can enable reqwest or reqwest feature to use http client implementation within create")]
     NoHttpClient,
     /// Http requests failed with following errors
     #[error(transparent)]
