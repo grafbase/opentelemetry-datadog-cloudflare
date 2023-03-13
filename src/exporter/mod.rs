@@ -28,6 +28,9 @@ use std::time::{Duration, SystemTime};
 
 use crate::dd_proto;
 
+#[cfg(not(feature = "reqwest-client"))]
+use reqwest as _;
+
 const DEFAULT_SITE_ENDPOINT: &str = "https://trace.agent.datadoghq.eu/";
 const DEFAULT_DD_TRACES_PATH: &str = "api/v0.2/traces";
 const DEFAULT_DD_CONTENT_TYPE: &str = "application/x-protobuf";
