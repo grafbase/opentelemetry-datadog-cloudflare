@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+-   Drop unused dependencies (including the worker crate).
+-   Switch to using reqwest as the HTTP client.
+
 ## [0.10.0]
 
 -   Add an extension that provides an async `force_flush`

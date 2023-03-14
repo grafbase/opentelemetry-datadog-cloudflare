@@ -28,6 +28,9 @@ use std::time::{Duration, SystemTime};
 
 use crate::dd_proto;
 
+#[cfg(not(feature = "reqwest-client"))]
+use reqwest as _;
+
 const DEFAULT_SITE_ENDPOINT: &str = "https://trace.agent.datadoghq.eu/";
 const DEFAULT_DD_TRACES_PATH: &str = "api/v0.2/traces";
 const DEFAULT_DD_CONTENT_TYPE: &str = "application/x-protobuf";
@@ -114,10 +117,10 @@ impl Default for DatadogPipelineBuilder {
             agent_endpoint: DEFAULT_SITE_ENDPOINT.to_string(),
             trace_config: None,
             api_key: None,
-            #[cfg(not(feature = "surf-client"))]
+            #[cfg(not(feature = "reqwest-client"))]
             client: None,
-            #[cfg(feature = "surf-client")]
-            client: Some(Arc::new(surf::Client::new())),
+            #[cfg(feature = "reqwest-client")]
+            client: Some(Arc::new(reqwest::Client::new())),
             env: None,
             tags: None,
             host_name: None,
@@ -161,7 +164,7 @@ impl SpanProcessExt for WASMWorkerSpanProcessor {
                 Ok(l) => l,
                 Err(e) => {
                     global::handle_error(e);
-                    return Err(TraceError::from("unable to obtain lock to flush"))
+                    return Err(TraceError::from("unable to obtain lock to flush"));
                 }
             };
 
@@ -198,7 +201,9 @@ impl SpanProcessor for WASMWorkerSpanProcessor {
     }
 
     fn force_flush(&self) -> TraceResult<()> {
-        Err(TraceError::from("Sync flush is not supported, use `force_flush` from `SpanProcessExt`"))
+        Err(TraceError::from(
+            "Sync flush is not supported, use `force_flush` from `SpanProcessExt`",
+        ))
     }
 
     fn shutdown(&mut self) -> TraceResult<()> {
@@ -234,7 +239,9 @@ impl DatadogPipelineBuilder {
                 cfg.resource = cfg.resource.map(|r| {
                     let without_service_name = r
                         .iter()
-                        .filter(|(k, _v)| **k != Key::new(semcov::resource::SERVICE_NAME.to_string()))
+                        .filter(|(k, _v)| {
+                            **k != Key::new(semcov::resource::SERVICE_NAME.to_string())
+                        })
                         .map(|(k, v)| KeyValue::new(k.clone(), v.clone()))
                         .collect::<Vec<KeyValue>>();
                     Arc::new(Resource::new(without_service_name))
@@ -410,9 +417,7 @@ impl DatadogPipelineBuilder {
 fn group_into_traces(spans: Vec<SpanData>) -> Vec<Vec<SpanData>> {
     spans
         .into_iter()
-        .into_group_map_by(|span_data| span_data.span_context.trace_id())
-        .into_iter()
-        .map(|(_, trace)| trace)
+        .into_group_map_by(|span_data| span_data.span_context.trace_id()).into_values()
         .collect()
 }
 

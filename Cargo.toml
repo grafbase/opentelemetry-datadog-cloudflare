@@ -18,23 +18,20 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
-surf-client = ["surf", "opentelemetry-http/surf"]
+reqwest-client = ["reqwest", "opentelemetry-http/reqwest"]
 
 [dependencies]
 async-trait = "0.1"
-futures-channel = { version = "0.3" }
 futures-util = "0.3"
 # don't bump to 0.18, it leads to memory access out of bounds in cloudflare workers
 opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any", features = ["trace"] }
 opentelemetry-http = { version = "0.6" }
 opentelemetry-semantic-conventions = { version = "0.9" }
-rmp = "0.8"
-surf = { version = "2", default-features = false, optional = true }
+reqwest = { version = "0.11", default-features = false, optional = true }
 thiserror = "1.0"
 itertools = "0.10"
 http = "0.2"
 lazy_static = "1"
-worker = "0.0.13"
 prost = { version = "0.11", features = ["std"] }
 
 [build-dependencies]
@@ -42,14 +39,11 @@ prost-build = { version = "0.11" }
 tonic-build = { version = "0.8", features = ["transport", "prost"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-surf = { version = "2", default-features = false, features = ["wasm-client"] }
+reqwest = { version = "0.11", default-features = false }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-surf = { version = "2", default-features = false, features = ["h1-client-rustls"] }
+reqwest = { version = "0.11", default-features = false, features = ["__rustls"] }
 
 [dev-dependencies]
-base64 = "0.13"
-bytes = "1"
 futures-util = { version = "0.3", features = ["io"] }
-isahc = "1"
 opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any", features = ["trace", "testing"] }

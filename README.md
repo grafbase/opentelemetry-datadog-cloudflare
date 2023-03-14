@@ -16,5 +16,5 @@ Based on [`opentelemetry-datadog`](https://github.com/open-telemetry/opentelemet
 
 `opentelemetry-datadog-cloudflare` supports following features:
 
-- `surf-client`: use `surf` http client to send spans.
+- `reqwest-client`: use the `reqwest` HTTP client to send spans.
 
