@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.11.0]
+
 -   Drop unused dependencies (including the worker crate).
 -   Switch to using reqwest as the HTTP client.
 
