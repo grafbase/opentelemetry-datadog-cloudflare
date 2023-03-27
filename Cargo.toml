@@ -26,7 +26,7 @@ futures-util = "0.3"
 # don't bump to 0.18, it leads to memory access out of bounds in cloudflare workers
 opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any", features = ["trace"] }
 opentelemetry-http = { version = "0.6" }
-opentelemetry-semantic-conventions = { version = "0.9" }
+opentelemetry-semantic-conventions = { version = "0.11" }
 reqwest = { version = "0.11", default-features = false, optional = true }
 thiserror = "1.0"
 itertools = "0.10"
