@@ -36,7 +36,7 @@ prost = { version = "0.11", features = ["std"] }
 
 [build-dependencies]
 prost-build = { version = "0.11" }
-tonic-build = { version = "0.8", features = ["transport", "prost"] }
+tonic-build = { version = "0.9", features = ["transport", "prost"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 reqwest = { version = "0.11", default-features = false }
