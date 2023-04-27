@@ -460,7 +460,7 @@ fn trace_into_dd_tracer_payload(exporter: &DatadogExporter, trace: SpanData) -> 
     let duration = trace
         .end_time
         .duration_since(trace.start_time)
-        .unwrap()
+        .unwrap_or_default()
         .as_nanos() as i64;
 
     let meta = trace
