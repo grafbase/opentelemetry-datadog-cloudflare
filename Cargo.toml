@@ -5,10 +5,7 @@ description = "Datadog exporters and propagators for OpenTelemetry for Cloudflar
 homepage = "https://github.com/grafbase/opentelemetry-datadog-cloudflare/"
 repository = "https://github.com/grafbase/opentelemetry-datadog-cloudflare/"
 readme = "README.md"
-categories = [
-    "development-tools::debugging",
-    "development-tools::profiling",
-]
+categories = ["development-tools::debugging", "development-tools::profiling"]
 keywords = ["opentelemetry", "tracing", "cloudflare", "worker", "datadog"]
 license = "Apache-2.0"
 edition = "2021"
@@ -18,14 +15,14 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
-reqwest-client = ["reqwest", "opentelemetry-http/reqwest"]
+reqwest-client = ["reqwest", "reqwest/wasm-streams"]
 
 [dependencies]
 async-trait = "0.1"
-futures-util = "0.3"
 # don't bump to 0.18, it leads to memory access out of bounds in cloudflare workers
-opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any", features = ["trace"] }
-opentelemetry-http = { version = "0.6" }
+opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any", features = [
+  "trace",
+] }
 opentelemetry-semantic-conventions = { version = "0.9" }
 reqwest = { version = "0.11", default-features = false, optional = true }
 thiserror = "1.0"
@@ -33,6 +30,7 @@ itertools = "0.10"
 http = "0.2"
 lazy_static = "1"
 prost = { version = "0.11", features = ["std"] }
+send_wrapper = { version = "0.6", features = ["futures"] }
 
 [build-dependencies]
 prost-build = { version = "0.11" }
@@ -40,10 +38,15 @@ tonic-build = { version = "0.8", features = ["transport", "prost"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 reqwest = { version = "0.11", default-features = false }
+getrandom = { version = "0.2", features = ["js"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-reqwest = { version = "0.11", default-features = false, features = ["__rustls"] }
+reqwest = { version = "0.11", default-features = false, features = [
+  "__rustls",
+] }
 
 [dev-dependencies]
-futures-util = { version = "0.3", features = ["io"] }
-opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any", features = ["trace", "testing"] }
+opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any", features = [
+  "trace",
+  "testing",
+] }
