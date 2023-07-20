@@ -179,6 +179,8 @@ impl SpanProcessExt for WASMWorkerSpanProcessor {
 
         let mut exporter = self.exporter.lock().await;
 
+        worker::console_log!("flush: {:?}", to_export);
+
         exporter.export(to_export).await
     }
 }
@@ -189,6 +191,7 @@ impl SpanProcessor for WASMWorkerSpanProcessor {
     }
 
     fn on_end(&self, span: SpanData) {
+        worker::console_log!("on_end: {:?}", span);
         let mut lock = match self.spans.write() {
             Ok(l) => l,
             Err(e) => {
