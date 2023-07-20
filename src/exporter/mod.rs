@@ -160,13 +160,17 @@ pub trait SpanProcessExt {
 impl SpanProcessExt for WASMWorkerSpanProcessor {
     async fn force_flush(&self) -> TraceResult<()> {
         let to_export = {
+            worker::console_log!("write_lock");
             let mut lock = match self.spans.write() {
                 Ok(l) => l,
                 Err(e) => {
+                    worker::console_log!("write_lock_err");
                     global::handle_error(e);
                     return Err(TraceError::from("unable to obtain lock to flush"));
                 }
             };
+
+            worker::console_log!("write_lock_acquired");
 
             let export_size = if lock.len() > self.flush_size {
                 self.flush_size
@@ -176,6 +180,8 @@ impl SpanProcessExt for WASMWorkerSpanProcessor {
 
             lock.drain(0..export_size).collect::<Vec<_>>()
         };
+
+        worker::console_log!("to_export: {:?}", to_export);
 
         let mut exporter = self.exporter.lock().await;
 
