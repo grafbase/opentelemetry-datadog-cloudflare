@@ -2,9 +2,11 @@
 
 ## [Unreleased]
 
-- Use a thread local instead of rwlock to store the spans
-- Drop opentelemetry::http as it was pulling the `blocking` feature of reqwest and causing hanging issues
-- Fixes a runtime panic when determining the span duration
+## [0.12.0]
+
+-   Use a thread local instead of rwlock to store the spans
+-   Drop opentelemetry::http as it was pulling the `blocking` feature of reqwest and causing hanging issues
+-   Fixes a runtime panic when determining the span duration
 
 ## [0.11.0]
 
