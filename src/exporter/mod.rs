@@ -1,12 +1,14 @@
+#[cfg(target_arch = "wasm32")]
+use getrandom as _;
+
 mod model;
 
 use async_trait::async_trait;
-use futures_util::lock::Mutex;
-use http::{Method, Request, Uri};
+use http::Uri;
 use itertools::Itertools;
 pub use model::Error;
 use opentelemetry::sdk::export::trace;
-use opentelemetry::sdk::export::trace::{SpanData, SpanExporter};
+use opentelemetry::sdk::export::trace::SpanData;
 use opentelemetry::sdk::resource::ResourceDetector;
 use opentelemetry::sdk::resource::SdkProvidedResourceDetector;
 use opentelemetry::sdk::trace::Config;
@@ -15,21 +17,24 @@ use opentelemetry::sdk::trace::SpanProcessor;
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::{SpanId, TraceResult};
 use opentelemetry::trace::{StatusCode, TraceError};
-use opentelemetry::{global, Key};
+use opentelemetry::Key;
 use opentelemetry::{sdk, trace::TracerProvider, KeyValue};
-use opentelemetry_http::HttpClient;
 use opentelemetry_semantic_conventions as semcov;
 use prost::Message;
+use send_wrapper::SendWrapper;
 use std::any::Any;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::sync::{Arc, RwLock};
+use std::future::Future;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
 use crate::dd_proto;
 
 #[cfg(not(feature = "reqwest-client"))]
 use reqwest as _;
+use reqwest::Client;
 
 const DEFAULT_SITE_ENDPOINT: &str = "https://trace.agent.datadoghq.eu/";
 const DEFAULT_DD_TRACES_PATH: &str = "api/v0.2/traces";
@@ -39,11 +44,15 @@ const DEFAULT_FLUSH_SIZE: usize = 500;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+thread_local! {
+    static SPANS: RefCell<Vec<SpanData>> = RefCell::new(Vec::new());
+}
+
 /// Datadog span exporter
 #[derive(Debug, Clone)]
 #[allow(clippy::module_name_repetitions)]
 pub struct DatadogExporter {
-    client: Arc<dyn HttpClient>,
+    client: Arc<Client>,
     request_url: Uri,
     service_name: String,
     env: String,
@@ -61,7 +70,7 @@ impl DatadogExporter {
     fn new(
         service_name: String,
         request_url: Uri,
-        client: Arc<dyn HttpClient>,
+        client: Arc<Client>,
         key: String,
         env: String,
         tags: BTreeMap<String, String>,
@@ -100,7 +109,7 @@ pub struct DatadogPipelineBuilder {
     agent_endpoint: String,
     api_key: Option<String>,
     trace_config: Option<sdk::trace::Config>,
-    client: Option<Arc<dyn HttpClient>>,
+    client: Option<Arc<Client>>,
     env: Option<String>,
     tags: Option<BTreeMap<String, String>>,
     host_name: Option<String>,
@@ -136,16 +145,14 @@ impl Default for DatadogPipelineBuilder {
 #[derive(Debug)]
 #[allow(clippy::type_complexity)]
 pub struct WASMWorkerSpanProcessor {
-    spans: RwLock<Vec<SpanData>>,
-    exporter: Arc<Mutex<Box<dyn SpanExporter>>>,
+    exporter: DatadogExporter,
     flush_size: usize,
 }
 
 impl WASMWorkerSpanProcessor {
-    pub(crate) fn new(exporter: Box<dyn SpanExporter>, flush_size: usize) -> Self {
+    pub(crate) fn new(exporter: DatadogExporter, flush_size: usize) -> Self {
         WASMWorkerSpanProcessor {
-            spans: RwLock::new(Vec::with_capacity(flush_size)),
-            exporter: Arc::new(Mutex::new(exporter)),
+            exporter,
             flush_size,
         }
     }
@@ -160,26 +167,22 @@ pub trait SpanProcessExt {
 impl SpanProcessExt for WASMWorkerSpanProcessor {
     async fn force_flush(&self) -> TraceResult<()> {
         let to_export = {
-            let mut lock = match self.spans.write() {
-                Ok(l) => l,
-                Err(e) => {
-                    global::handle_error(e);
-                    return Err(TraceError::from("unable to obtain lock to flush"));
-                }
-            };
+            SPANS.with(|spans| {
+                let mut spans = spans
+                    .try_borrow_mut()
+                    .expect("should safely succeeded given the single threaded runtime");
 
-            let export_size = if lock.len() > self.flush_size {
-                self.flush_size
-            } else {
-                lock.len()
-            };
+                let export_size = if spans.len() > self.flush_size {
+                    self.flush_size
+                } else {
+                    spans.len()
+                };
 
-            lock.drain(0..export_size).collect::<Vec<_>>()
+                spans.drain(0..export_size).collect::<Vec<_>>()
+            })
         };
 
-        let mut exporter = self.exporter.lock().await;
-
-        exporter.export(to_export).await
+        self.exporter.export(to_export).await
     }
 }
 
@@ -189,15 +192,12 @@ impl SpanProcessor for WASMWorkerSpanProcessor {
     }
 
     fn on_end(&self, span: SpanData) {
-        let mut lock = match self.spans.write() {
-            Ok(l) => l,
-            Err(e) => {
-                global::handle_error(e);
-                return;
-            }
-        };
-
-        lock.push(span);
+        SPANS.with(|spans| {
+            spans
+                .try_borrow_mut()
+                .expect("should safely succeeded given the single threaded runtime")
+                .push(span);
+        });
     }
 
     fn force_flush(&self) -> TraceResult<()> {
@@ -313,7 +313,7 @@ impl DatadogPipelineBuilder {
         let (config, service_name) = self.build_config_and_service_name();
         let exporter = self.build_exporter_with_service_name(service_name)?;
         let flush_size = exporter.flush_size;
-        let span_processor = WASMWorkerSpanProcessor::new(Box::new(exporter), flush_size);
+        let span_processor = WASMWorkerSpanProcessor::new(exporter, flush_size);
         let mut provider_builder =
             sdk::trace::TracerProvider::builder().with_span_processor(span_processor);
         provider_builder = provider_builder.with_config(config);
@@ -349,10 +349,7 @@ impl DatadogPipelineBuilder {
 
     /// Choose the http client used by uploader
     #[must_use]
-    pub fn with_http_client<T: HttpClient + 'static>(
-        mut self,
-        client: Arc<dyn HttpClient>,
-    ) -> Self {
+    pub fn with_http_client(mut self, client: Arc<Client>) -> Self {
         self.client = Some(client);
         self
     }
@@ -417,7 +414,8 @@ impl DatadogPipelineBuilder {
 fn group_into_traces(spans: Vec<SpanData>) -> Vec<Vec<SpanData>> {
     spans
         .into_iter()
-        .into_group_map_by(|span_data| span_data.span_context.trace_id()).into_values()
+        .into_group_map_by(|span_data| span_data.span_context.trace_id())
+        .into_values()
         .collect()
 }
 
@@ -460,7 +458,7 @@ fn trace_into_dd_tracer_payload(exporter: &DatadogExporter, trace: SpanData) -> 
     let duration = trace
         .end_time
         .duration_since(trace.start_time)
-        .unwrap()
+        .unwrap_or_default()
         .as_nanos() as i64;
 
     let meta = trace
@@ -531,11 +529,10 @@ impl DatadogExporter {
     }
 }
 
-#[async_trait::async_trait]
-impl trace::SpanExporter for DatadogExporter {
+impl DatadogExporter {
     /// Export spans to datadog
     // TODO: Should split & batch them when it's too big, check Vector reference.
-    async fn export(&mut self, batch: Vec<SpanData>) -> trace::ExportResult {
+    fn export(&self, batch: Vec<SpanData>) -> impl Future<Output = trace::ExportResult> + Send {
         let traces: Vec<Vec<SpanData>> = group_into_traces(batch);
 
         let chunks: Vec<dd_proto::TraceChunk> = traces
@@ -555,19 +552,27 @@ impl trace::SpanExporter for DatadogExporter {
         let trace = self.trace_build(vec![traces]);
         let trace = trace.encode_to_vec();
 
-        let req = Request::builder()
-            .method(Method::POST)
-            .uri(self.request_url.clone())
+        let request = self
+            .client
+            .post(self.request_url.to_string())
             .header(http::header::CONTENT_TYPE, DEFAULT_DD_CONTENT_TYPE)
             .header("X-Datadog-Reported-Languages", "rust")
             .header(DEFAULT_DD_API_KEY_HEADER, self.key.clone())
-            .body(trace)
-            .map_err::<Error, _>(Into::into)?;
+            .body(trace);
 
-        if let Err(e) = self.client.send(req).await {
-            return Err(TraceError::from(e.to_string()));
-        }
+        SendWrapper::new(async move {
+            let response = match request.send().await {
+                Ok(response) => response,
+                Err(e) => return Err(TraceError::from(e.to_string())),
+            };
 
-        Ok(())
+            if !response.status().is_success() {
+                return match response.text().await {
+                    Ok(text) => Err(TraceError::from(text)),
+                    Err(e) => Err(TraceError::from(e.to_string())),
+                };
+            }
+            Ok(())
+        })
     }
 }
