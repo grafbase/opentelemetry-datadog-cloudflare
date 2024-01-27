@@ -24,9 +24,9 @@ reqwest = { git = "https://github.com/grafbase/reqwest", rev = "9d8f00dbfa2274e6
 [dependencies]
 async-trait = "0.1"
 # don't bump to 0.18, it leads to memory access out of bounds in cloudflare workers
-opentelemetry = { version = "0.17", features = [
+opentelemetry = { git = "https://github.com/grafbase/opentelemetry-rust", rev = "0090eb6360104589313b78749ce6c3d1f81e1b99", features = [
   "trace",
-] }
+] } # 0.17.0-send-wrapper-as-any
 opentelemetry-semantic-conventions = { version = "0.9" }
 reqwest = { version = "0.11", default-features = false, optional = true }
 thiserror = "1.0"
@@ -50,7 +50,7 @@ reqwest = { version = "0.11", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any", features = [
+opentelemetry = { git = "https://github.com/grafbase/opentelemetry-rust", rev = "0090eb6360104589313b78749ce6c3d1f81e1b99", features = [
   "trace",
   "testing",
-] }
+] } # 0.17.0-send-wrapper-as-any
