@@ -24,7 +24,7 @@ reqwest = { git = "https://github.com/grafbase/reqwest", rev = "9d8f00dbfa2274e6
 [dependencies]
 async-trait = "0.1"
 # don't bump to 0.18, it leads to memory access out of bounds in cloudflare workers
-opentelemetry = { version = "0.17", features = [
+opentelemetry = { version = "0.21", features = [
   "trace",
 ] }
 opentelemetry-semantic-conventions = { version = "0.9" }
