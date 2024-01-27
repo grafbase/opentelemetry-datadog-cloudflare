@@ -17,6 +17,10 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 reqwest-client = ["reqwest", "reqwest/wasm-streams"]
 
+[patch.crates-io]
+hyper-util = { git = "https://github.com/grafbase/hyper-util", rev = "c7acf8968d96a4408e952a097d93602d2e8ed01a" }
+reqwest = { git = "https://github.com/grafbase/reqwest", rev = "9d8f00dbfa2274e6cf7061aa97ffc8677167a729" } # hyper-v1-and-wasm-from-parts-build-split
+
 [dependencies]
 async-trait = "0.1"
 # don't bump to 0.18, it leads to memory access out of bounds in cloudflare workers
@@ -27,7 +31,7 @@ opentelemetry-semantic-conventions = { version = "0.9" }
 reqwest = { version = "0.11", default-features = false, optional = true }
 thiserror = "1.0"
 itertools = "0.10"
-http = "0.2"
+http = "1"
 lazy_static = "1"
 prost = { version = "0.11", features = ["std"] }
 send_wrapper = { version = "0.6", features = ["futures"] }
