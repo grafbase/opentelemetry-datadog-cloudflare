@@ -30,7 +30,7 @@ opentelemetry = { version = "0.17", package = "opentelemetry-spanprocessor-any",
 opentelemetry-semantic-conventions = { version = "0.9" }
 reqwest = { version = "0.11", default-features = false, optional = true }
 thiserror = "1.0"
-itertools = "0.10"
+itertools = "0.12"
 http = "1"
 lazy_static = "1"
 prost = { version = "0.11", features = ["std"] }
