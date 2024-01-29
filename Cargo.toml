@@ -27,7 +27,7 @@ async-trait = "0.1"
 opentelemetry = { git = "https://github.com/grafbase/opentelemetry-rust", rev = "0090eb6360104589313b78749ce6c3d1f81e1b99", features = [
   "trace",
 ] } # 0.17.0-send-wrapper-as-any
-opentelemetry-semantic-conventions = { version = "0.9" }
+opentelemetry-semantic-conventions = { git = "https://github.com/grafbase/opentelemetry-rust", rev = "0090eb6360104589313b78749ce6c3d1f81e1b99" } # 0.17.0-send-wrapper-as-any
 reqwest = { version = "0.11", default-features = false, optional = true }
 thiserror = "1.0"
 itertools = "0.12"
