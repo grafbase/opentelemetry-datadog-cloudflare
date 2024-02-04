@@ -39,7 +39,7 @@ prost = { version = "0.11", features = ["std"] }
 send_wrapper = { version = "0.6", features = ["futures"] }
 
 [build-dependencies]
-prost-build = { version = "0.11" }
+prost-build = { version = "0.12" }
 tonic-build = { version = "0.8", features = ["transport", "prost"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
