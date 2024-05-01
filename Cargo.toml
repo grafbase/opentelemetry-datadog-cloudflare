@@ -22,7 +22,7 @@ hyper-util = { git = "https://github.com/grafbase/hyper-util", rev = "c7acf8968d
 reqwest = { git = "https://github.com/grafbase/reqwest", rev = "9d8f00dbfa2274e6cf7061aa97ffc8677167a729" } # hyper-v1-and-wasm-from-parts-build-split
 
 [dependencies]
-async-trait = "0.1"
+async-trait = "0.1.80"
 # don't bump to 0.18, it leads to memory access out of bounds in cloudflare workers
 opentelemetry = { git = "https://github.com/grafbase/opentelemetry-rust", rev = "0090eb6360104589313b78749ce6c3d1f81e1b99", features = [
   "trace",
