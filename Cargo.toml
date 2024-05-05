@@ -30,7 +30,7 @@ opentelemetry = { git = "https://github.com/grafbase/opentelemetry-rust", rev = 
 opentelemetry-semantic-conventions = { git = "https://github.com/grafbase/opentelemetry-rust", rev = "0090eb6360104589313b78749ce6c3d1f81e1b99", features = [
   "trace",
 ] } # 0.17.0-send-wrapper-as-any
-reqwest = { version = "0.11", default-features = false, optional = true }
+reqwest = { version = "0.12", default-features = false, optional = true }
 thiserror = "1.0"
 itertools = "0.12"
 http = "1"
@@ -43,11 +43,11 @@ prost-build = { version = "0.11" }
 tonic-build = { version = "0.8", features = ["transport", "prost"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-reqwest = { version = "0.11", default-features = false }
+reqwest = { version = "0.12", default-features = false }
 getrandom = { version = "0.2", features = ["js"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-reqwest = { version = "0.11", default-features = false, features = [
+reqwest = { version = "0.12", default-features = false, features = [
   "__rustls",
 ] }
 
