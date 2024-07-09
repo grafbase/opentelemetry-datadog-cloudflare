@@ -35,11 +35,11 @@ thiserror = "1.0"
 itertools = "0.12"
 http = "1"
 lazy_static = "1"
-prost = { version = "0.11", features = ["std"] }
+prost = { version = "0.13", features = ["std"] }
 send_wrapper = { version = "0.6", features = ["futures"] }
 
 [build-dependencies]
-prost-build = { version = "0.11" }
+prost-build = { version = "0.13" }
 tonic-build = { version = "0.8", features = ["transport", "prost"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
